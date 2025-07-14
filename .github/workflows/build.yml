@@ -27,7 +27,7 @@ jobs:
         overwrite: false
 
   release:
-    needs: [build, build_macos]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
     - name: download artifacts

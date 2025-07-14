@@ -8,7 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     - name: build docker image
       run: docker build -t build .
     - name: prepare
@@ -26,8 +26,28 @@ jobs:
         compression-level: 6
         overwrite: false
 
+  build_macos:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-14, macos-13] # arm and x86
+      name: macos-${{ matrix.os }} # 添加矩阵名称标识符
+    steps:
+    - uses: actions/checkout@v3
+    - name: build
+      run: make macos
+    - name: upload macos artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        path: macos*.tar.gz
+        # 使用矩阵参数创建唯一名称
+        name: macos-artifacts-${{ matrix.os }}
+        if-no-files-found: warn
+        compression-level: 6
+        overwrite: false
+
   release:
-    needs: [build]
+    needs: [build, build_macos]
     runs-on: ubuntu-latest
     steps:
     - name: download artifacts

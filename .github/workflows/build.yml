@@ -6,56 +6,58 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-
     - name: build docker image
       run: docker build -t build .
-
     - name: prepare
       run: cd lib && make prepare && cd ..
-
     - name: build in docker image
       run: docker run -v $PWD:/work --rm build bash -c "cd /work && make"
-
-    - name: upload artifacts
+    - name: upload linux artifacts
       uses: actions/upload-artifact@v4
       with:
         path: |
           linux*.tar.gz
           win32*.zip
+        name: linux-win-artifacts
+        if-no-files-found: warn
+        compression-level: 6
+        overwrite: false
 
   build_macos:
-
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14, macos-13] # arm and x86
-
+        os: [macos-14, macos-13]
     steps:
     - uses: actions/checkout@v4
-
     - name: build
       run: make macos
-
-    - name: upload artifacts
+    - name: upload macos artifacts
       uses: actions/upload-artifact@v4
       with:
         path: macos*.tar.gz
+        name: macos-artifacts
+        if-no-files-found: warn
+        compression-level: 6
+        overwrite: false
 
   release:
-    needs: [ build , build_macos ]
+    needs: [build, build_macos]
     runs-on: ubuntu-latest
     steps:
     - name: download artifacts
       uses: actions/download-artifact@v4
       with:
-        path: .
-
+        path: artifacts
+        pattern: '*'
+        merge-multiple: true
+    
     - name: release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh && bash upload.sh artifact/*
+      run: |
+        wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+        bash upload.sh artifacts/*/*

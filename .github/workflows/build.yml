@@ -26,24 +26,6 @@ jobs:
         compression-level: 6
         overwrite: false
 
-  build_macos:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-14, macos-13]
-    steps:
-    - uses: actions/checkout@v4
-    - name: build
-      run: make macos
-    - name: upload macos artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        path: macos*.tar.gz
-        name: macos-artifacts
-        if-no-files-found: warn
-        compression-level: 6
-        overwrite: false
-
   release:
     needs: [build, build_macos]
     runs-on: ubuntu-latest

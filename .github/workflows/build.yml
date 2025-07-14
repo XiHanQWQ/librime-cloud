@@ -31,7 +31,6 @@ jobs:
     strategy:
       matrix:
         os: [macos-14, macos-13] # arm and x86
-        name: macos-${{ matrix.os }} # 添加矩阵名称标识符
     steps:
     - uses: actions/checkout@v3
     - name: build

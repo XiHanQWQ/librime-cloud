@@ -15,7 +15,6 @@ mkdir -p build64 && cd build64 && ../configure --host x86_64-w64-mingw32 \
 --disable-ldap \
 --disable-mqtt \
 --disable-pop3 \
---disable-proxy \
 --disable-rtsp \
 --disable-smtp \
 --disable-telnet \

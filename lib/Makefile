@@ -24,7 +24,7 @@ librime-lua5.4:
 	unzip rime-with-plugins-1.7.3-win32.zip -d librime-lua5.4
 
 librime-lua5.4-x64:
-	curl -L -O https://github.com/rime/librime/releases/download/latest/rime-73890c5-Windows-msvc-x64.7z
+	curl -L -O https://github.com/rime/librime/releases/download/latest/rime-1a1fbbe-Windows-msvc-x64.7z
 	7z x -olibrime-lua5.4-x64 rime-73890c5-Windows-msvc-x64.7z
 
 thirdparty:

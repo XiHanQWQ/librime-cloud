@@ -10,6 +10,7 @@ Modification:
 - use libcurl as the only backend
 - handle multiple headers (e.g. Set-Cookie)
 - keep header order
+- add proxy support
 
 Original copyright notice:
 ----
@@ -90,6 +91,7 @@ typedef struct {
 	const char *postdata;
 	String header;
 	long timeout;
+	const char *proxy;  // 新增代理字段
 } Request;
 
 typedef struct {
@@ -177,6 +179,12 @@ static bool request(Context *curl, const Request *req, Reply *reply)
 	curl_(easy_setopt)(ch, CURLOPT_CUSTOMREQUEST, req->method);
 	if (req->timeout)
 		curl_(easy_setopt)(ch, CURLOPT_TIMEOUT_MS, req->timeout);
+	
+	// 添加代理支持
+	if (req->proxy && req->proxy[0] != '\0') {
+		curl_(easy_setopt)(ch, CURLOPT_PROXY, req->proxy);
+		curl_(easy_setopt)(ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); // 默认HTTP代理
+	}
 
 	if (req->postdatalen > 0 &&
 	    strcmp(req->method, "GET") && strcmp(req->method, "HEAD")) {
@@ -208,7 +216,11 @@ static bool request(Context *curl, const Request *req, Reply *reply)
 	curl_(easy_setopt)(ch, CURLOPT_HEADERFUNCTION, string_writer0);
 	curl_(easy_setopt)(ch, CURLOPT_HEADERDATA, &reply->header);
 
-	curl_(easy_perform)(ch);
+	CURLcode res = curl_(easy_perform)(ch);
+	if (res != CURLE_OK) {
+		reply->error = curl_easy_strerror(res);
+	}
+
 	long code;
 	curl_(easy_getinfo)(ch, CURLINFO_RESPONSE_CODE, &code);
 	reply->code = (int) code;
@@ -216,7 +228,7 @@ static bool request(Context *curl, const Request *req, Reply *reply)
 	if (headers)
 		curl_(slist_free_all)(headers);
 	curl_(easy_cleanup)(ch);
-	return true;
+	return res == CURLE_OK;
 }
 
 static int string_gc(lua_State *L)
@@ -316,6 +328,13 @@ static int w_request(lua_State *L)
 		}
 		lua_pop(L, 1);
 
+		// 添加代理配置解析
+		lua_getfield(L, table_idx, "proxy");
+		if (!lua_isnoneornil(L, -1)) {
+			req.proxy = luaL_checkstring(L, -1);
+		}
+		lua_pop(L, 1);
+
 		lua_getfield(L, table_idx, "headers");
 		bool flag = false;
 		if (!lua_isnoneornil(L, -1)) {
@@ -369,7 +388,7 @@ static int w_request(lua_State *L)
 
 	if (!ok) {
 		lua_pushnil(L);
-		lua_pushstring(L, reply.error);
+		lua_pushstring(L, reply.error ? reply.error : "Unknown error");
 		return 2;
 	}
 

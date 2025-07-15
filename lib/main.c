@@ -10,7 +10,7 @@ Modification:
 - use libcurl as the only backend
 - handle multiple headers (e.g. Set-Cookie)
 - keep header order
-- add proxy support
+- add proxy support with protocol detection
 
 Original copyright notice:
 ----
@@ -91,7 +91,8 @@ typedef struct {
 	const char *postdata;
 	String header;
 	long timeout;
-	const char *proxy;  // 新增代理字段
+	const char *proxy;  // 代理URL字符串
+	const char *proxy_type; // 新增代理类型字段
 } Request;
 
 typedef struct {
@@ -166,6 +167,25 @@ static void cleanup(Context *curl)
 	curl->loaded = false;
 }
 
+// 根据代理URL检测代理类型
+static int detect_proxy_type(const char *proxy_url)
+{
+    if (strncmp(proxy_url, "socks4://", 9) == 0) {
+        return CURLPROXY_SOCKS4;
+    } else if (strncmp(proxy_url, "socks4a://", 10) == 0) {
+        return CURLPROXY_SOCKS4A;
+    } else if (strncmp(proxy_url, "socks5://", 9) == 0) {
+        return CURLPROXY_SOCKS5;
+    } else if (strncmp(proxy_url, "socks5h://", 10) == 0) {
+        return CURLPROXY_SOCKS5_HOSTNAME;
+    } else if (strncmp(proxy_url, "https://", 8) == 0) {
+        return CURLPROXY_HTTPS;
+    } else {
+        // 默认为HTTP代理
+        return CURLPROXY_HTTP;
+    }
+}
+
 static bool request(Context *curl, const Request *req, Reply *reply)
 {
 	CURL *ch = curl_(easy_init)();
@@ -180,10 +200,19 @@ static bool request(Context *curl, const Request *req, Reply *reply)
 	if (req->timeout)
 		curl_(easy_setopt)(ch, CURLOPT_TIMEOUT_MS, req->timeout);
 	
-	// 添加代理支持
+	// 增强代理支持：支持多种代理类型
 	if (req->proxy && req->proxy[0] != '\0') {
 		curl_(easy_setopt)(ch, CURLOPT_PROXY, req->proxy);
-		curl_(easy_setopt)(ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); // 默认HTTP代理
+		
+		// 根据代理URL自动检测代理类型
+		int proxy_type = detect_proxy_type(req->proxy);
+		curl_(easy_setopt)(ch, CURLOPT_PROXYTYPE, proxy_type);
+		
+		// 支持HTTPS代理的验证
+		if (proxy_type == CURLPROXY_HTTPS) {
+			curl_(easy_setopt)(ch, CURLOPT_PROXY_SSL_VERIFYPEER, 0L);
+			curl_(easy_setopt)(ch, CURLOPT_PROXY_SSL_VERIFYHOST, 0L);
+		}
 	}
 
 	if (req->postdatalen > 0 &&

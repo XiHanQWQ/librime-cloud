@@ -10,6 +10,7 @@ Modification:
 - use libcurl as the only backend
 - handle multiple headers (e.g. Set-Cookie)
 - keep header order
+- add proxy support
 
 Original copyright notice:
 ----
@@ -88,6 +89,7 @@ typedef struct {
 	const char *url;
 	const char *method;
 	const char *postdata;
+	const char *proxy;  // 添加代理字段
 	String header;
 	long timeout;
 } Request;
@@ -177,6 +179,11 @@ static bool request(Context *curl, const Request *req, Reply *reply)
 	curl_(easy_setopt)(ch, CURLOPT_CUSTOMREQUEST, req->method);
 	if (req->timeout)
 		curl_(easy_setopt)(ch, CURLOPT_TIMEOUT_MS, req->timeout);
+	
+	// 设置代理 (新增代码)
+	if (req->proxy != NULL) {
+		curl_(easy_setopt)(ch, CURLOPT_PROXY, req->proxy);
+	}
 
 	if (req->postdatalen > 0 &&
 	    strcmp(req->method, "GET") && strcmp(req->method, "HEAD")) {
@@ -307,6 +314,13 @@ static int w_request(lua_State *L)
 				luaL_checklstring(L, -1, &req.postdatalen);
 			req.method = "POST";
 			defhdr = post_defhdr;
+		}
+		lua_pop(L, 1);
+		
+		// 解析代理设置 (新增代码)
+		lua_getfield(L, table_idx, "proxy");
+		if (!lua_isnoneornil(L, -1)) {
+			req.proxy = luaL_checkstring(L, -1);
 		}
 		lua_pop(L, 1);
 

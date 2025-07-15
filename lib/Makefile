@@ -20,7 +20,7 @@ LDFLAGS = ${LDFLAGS_${PLAT}}
 all: simplehttp.so simplehttp.dll simplehttpx64.dll
 
 librime-lua5.4:
-	curl -L -O https://github.com/rime/librime/releases/download/1.7.3/rime-with-plugins-1.7.3-win32.zip
+	curl -L -O https://github.com/rime/librime/releases/download/latest/rime-1a1fbbe-Windows-msvc-x64.7z
 	unzip rime-with-plugins-1.7.3-win32.zip -d librime-lua5.4
 
 librime-lua5.4-x64:

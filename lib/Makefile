@@ -20,12 +20,12 @@ LDFLAGS = ${LDFLAGS_${PLAT}}
 all: simplehttp.so simplehttp.dll simplehttpx64.dll
 
 librime-lua5.4:
-	curl -L -O https://github.com/rime/librime/releases/download/latest/rime-1a1fbbe-Windows-msvc-x86.7z
-	7z x -olibrime-lua5.4 rime-1a1fbbe-Windows-msvc-x86.7z
+	curl -L -O https://github.com/rime/librime/releases/download/1.14.0/rime-e053fb2-Windows-msvc-x86.7z
+	7z x -olibrime-lua5.4 rime-e053fb2-Windows-msvc-x86.7z
 
 librime-lua5.4-x64:
-	curl -L -O https://github.com/rime/librime/releases/download/latest/rime-1a1fbbe-Windows-msvc-x64.7z
-	7z x -olibrime-lua5.4-x64 rime-1a1fbbe-Windows-msvc-x64.7z
+	curl -L -O https://github.com/rime/librime/releases/download/1.14.0/rime-e053fb2-Windows-msvc-x64.7z
+	7z x -olibrime-lua5.4-x64 rime-e053fb2-Windows-msvc-x64.7z
 
 thirdparty:
 	git clone -b thirdparty http://github.com/hchunhui/librime-lua.git thirdparty

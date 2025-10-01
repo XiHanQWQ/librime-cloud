@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-15, macos-13] # arm and x86
+        os: [macos-15, macos-15-intel] # arm and x86
     steps:
     - uses: actions/checkout@v4
     - name: build

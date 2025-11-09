@@ -3,76 +3,67 @@ name: build
 on:
   push:
     branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [linux, win32]
+
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+
     - name: build docker image
       run: docker build -t build .
+
     - name: prepare
       run: cd lib && make prepare && cd ..
+
     - name: build in docker image
-      run: docker run -v $PWD:/work --rm build bash -c "cd /work && make"
-    - name: upload linux artifacts
+      run: docker run -v $PWD:/work --rm build bash -c "cd /work && make ${{ matrix.os }}"
+
+    - name: upload artifacts
       uses: actions/upload-artifact@v4
       with:
+        name: ${{ matrix.os }}
         path: |
-          linux*.tar.gz
-          win32*.zip
-        name: linux-win-artifacts
-        if-no-files-found: warn
-        compression-level: 6
-        overwrite: false
+          ${{ matrix.os }}*.zip
+          ${{ matrix.os }}*.tar.gz
 
   build_macos:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-15, macos-15-intel] # arm and x86
+        os: [macos-15, macos-15-intel]
+
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+
     - name: build
       run: make macos
-    - name: upload macos artifacts
+
+    - name: upload artifacts
       uses: actions/upload-artifact@v4
       with:
+        name: ${{ matrix.os }}
         path: macos*.tar.gz
-        name: macos-artifacts-${{ matrix.os }}
-        if-no-files-found: warn
-        compression-level: 6
-        overwrite: false
 
   release:
-    needs: [build, build_macos]
+    needs: [ build , build_macos ]
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
     steps:
     - name: download artifacts
       uses: actions/download-artifact@v4
       with:
-        path: artifacts
-        pattern: '*'
+        path: artifact
         merge-multiple: true
-    
-    - name: list downloaded files
-      run: |
-        echo "Downloaded artifacts:"
-        find artifacts -type f -print
-        
-    - name: prepare release files
-      run: |
-        # 将所有文件复制到统一的目录
-        mkdir release_files
-        find artifacts -type f -exec cp {} release_files \;
-        
-        echo "Files to release:"
-        ls -lh release_files
-        
+
     - name: release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-        chmod +x upload.sh
-        ./upload.sh release_files/*
+      run: wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh && bash upload.sh artifact/*

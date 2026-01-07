@@ -2,15 +2,15 @@ CC = gcc
 CC_mingw = i686-w64-mingw32-gcc
 CC_mingw64 = x86_64-w64-mingw32-gcc
 
-LUAV ?= 5.5
+LUAV ?= 5.4
 LUAINC = thirdparty/lua${LUAV}
 LUALIB = -Llibrime-lua${LUAV}/dist/lib -lrime
 LUALIB64 = -Llibrime-lua${LUAV}-x64/dist/lib -lrime
 
-CURLV ?= 8.14.1
+CURLV ?= 8.18.0
 CURLINC = curl-${CURLV}/include
-CURLLIB = -Lcurl-${CURLV}/build32/lib/.libs -lcurl -lws2_32 -lcrypt32 -lbcrypt
-CURLLIB64 = -Lcurl-${CURLV}/build64/lib/.libs -lcurl -lws2_32 -lcrypt32 -lbcrypt
+CURLLIB = -Lcurl-${CURLV}/build32/lib/.libs -lcurl -lsecur32 -lws2_32 -lcrypt32 -lbcrypt
+CURLLIB64 = -Lcurl-${CURLV}/build64/lib/.libs -lcurl -lsecur32 -lws2_32 -lcrypt32 -lbcrypt
 
 ICONV_V ?= 1.18
 LUA_ICONV_V ?= 7.1.0
@@ -26,16 +26,15 @@ LDFLAGS = ${LDFLAGS_${PLAT}}
 
 all: simplehttp.so simplehttp.dll simplehttpx64.dll iconv.so iconv.dll iconvx64.dll
 
-librime-lua5.5:
-	curl -L -O https://github.com/XiHanQWQ/librime/releases/download/latest/rime-b591ce6-Windows-msvc-x86.7z
-	7z x -olibrime-lua5.5 rime-b591ce6-Windows-msvc-x86.7z
+librime-lua5.4:
+	curl -L -O https://github.com/rime/librime/releases/download/1.16.1/rime-de4700e-Windows-msvc-x86.7z
+	7z x -olibrime-lua5.4 rime-de4700e-Windows-msvc-x86.7z
 
-librime-lua5.5-x64:
-	curl -L -O https://github.com/XiHanQWQ/librime/releases/download/latest/rime-b591ce6-Windows-msvc-x64.7z
-	7z x -olibrime-lua5.5-x64 rime-b591ce6-Windows-msvc-x64.7z
-
+librime-lua5.4-x64:
+	curl -L -O https://github.com/rime/librime/releases/download/1.16.1/rime-de4700e-Windows-msvc-x64.7z
+	7z x -olibrime-lua5.4-x64 rime-de4700e-Windows-msvc-x64.7z
 thirdparty:
-	git clone -b thirdparty http://github.com/XiHanQWQ/librime-lua.git thirdparty
+	git clone -b thirdparty http://github.com/hchunhui/librime-lua.git thirdparty
 
 curl-${CURLV}:
 	curl -L -O https://curl.se/download/curl-${CURLV}.tar.gz
@@ -48,7 +47,7 @@ libiconv-${ICONV_V}:
 lua-iconv-${LUA_ICONV_V}:
 	git clone -b v${LUA_ICONV_V} https://github.com/lunarmodules/lua-iconv.git lua-iconv-${LUA_ICONV_V}
 
-prepare: librime-lua5.5 librime-lua5.5-x64 thirdparty curl-${CURLV} lua-iconv-${LUA_ICONV_V}
+prepare: librime-lua5.4 librime-lua5.4-x64 thirdparty curl-${CURLV} lua-iconv-${LUA_ICONV_V}
 
 curl-${CURLV}/build32/lib/.libs: curl-${CURLV}
 	cd curl-${CURLV} && sh ../tinycurl.sh

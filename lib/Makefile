@@ -2,7 +2,7 @@ CC = gcc
 CC_mingw = i686-w64-mingw32-gcc
 CC_mingw64 = x86_64-w64-mingw32-gcc
 
-LUAV ?= 5.4
+LUAV ?= 5.5
 LUAINC = thirdparty/lua${LUAV}
 LUALIB = -Llibrime-lua${LUAV}/dist/lib -lrime
 LUALIB64 = -Llibrime-lua${LUAV}-x64/dist/lib -lrime
@@ -26,16 +26,16 @@ LDFLAGS = ${LDFLAGS_${PLAT}}
 
 all: simplehttp.so simplehttp.dll simplehttpx64.dll iconv.so iconv.dll iconvx64.dll
 
-librime-lua5.4:
-	curl -L -O https://github.com/rime/librime/releases/download/latest/rime-9e5fece-Windows-msvc-x86.7z
-	7z x -olibrime-lua5.4 rime-9e5fece-Windows-msvc-x86.7z
+librime-lua5.5:
+	curl -L -O https://github.com/XiHanQWQ/librime/releases/download/latest/rime-b591ce6-Windows-msvc-x86.7z
+	7z x -olibrime-lua5.5 rime-b591ce6-Windows-msvc-x86.7z
 
-librime-lua5.4-x64:
-	curl -L -O https://github.com/rime/librime/releases/download/latest/rime-9e5fece-Windows-msvc-x64.7z
-	7z x -olibrime-lua5.4-x64 rime-9e5fece-Windows-msvc-x64.7z
+librime-lua5.5-x64:
+	curl -L -O https://github.com/XiHanQWQ/librime/releases/download/latest/rime-b591ce6-Windows-msvc-x64.7z
+	7z x -olibrime-lua5.5-x64 rime-b591ce6-Windows-msvc-x64.7z
 
 thirdparty:
-	git clone -b thirdparty http://github.com/hchunhui/librime-lua.git thirdparty
+	git clone -b thirdparty http://github.com/XiHanQWQ/librime-lua.git thirdparty
 
 curl-${CURLV}:
 	curl -L -O https://curl.se/download/curl-${CURLV}.tar.gz
@@ -48,7 +48,7 @@ libiconv-${ICONV_V}:
 lua-iconv-${LUA_ICONV_V}:
 	git clone -b v${LUA_ICONV_V} https://github.com/lunarmodules/lua-iconv.git lua-iconv-${LUA_ICONV_V}
 
-prepare: librime-lua5.4 librime-lua5.4-x64 thirdparty curl-${CURLV} lua-iconv-${LUA_ICONV_V}
+prepare: librime-lua5.5 librime-lua5.5-x64 thirdparty curl-${CURLV} lua-iconv-${LUA_ICONV_V}
 
 curl-${CURLV}/build32/lib/.libs: curl-${CURLV}
 	cd curl-${CURLV} && sh ../tinycurl.sh

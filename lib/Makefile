@@ -7,10 +7,10 @@ LUAINC = thirdparty/lua${LUAV}
 LUALIB = -Llibrime-lua${LUAV}/dist/lib -lrime
 LUALIB64 = -Llibrime-lua${LUAV}-x64/dist/lib -lrime
 
-CURLV ?= 8.18.0
+CURLV ?= 8.22.0
 CURLINC = curl-${CURLV}/include
-CURLLIB = -Lcurl-${CURLV}/build32/lib/.libs -lcurl -lsecur32 -lws2_32 -lcrypt32 -lbcrypt
-CURLLIB64 = -Lcurl-${CURLV}/build64/lib/.libs -lcurl -lsecur32 -lws2_32 -lcrypt32 -lbcrypt
+CURLLIB = -Lcurl-${CURLV}/build32/lib/.libs -lcurl -lsecur32 -lbcrypt -ladvapi32 -lcrypt32 -lws2_32 -liphlpapi
+CURLLIB64 = -Lcurl-${CURLV}/build64/lib/.libs -lcurl -lsecur32 -lbcrypt -ladvapi32 -lcrypt32 -lws2_32 -liphlpapi
 
 ICONV_V ?= 1.18
 LUA_ICONV_V ?= 7.1.0
@@ -27,12 +27,12 @@ LDFLAGS = ${LDFLAGS_${PLAT}}
 all: simplehttp.so simplehttp.dll simplehttpx64.dll iconv.so iconv.dll iconvx64.dll
 
 librime-lua5.4:
-	curl -L -O https://github.com/rime/librime/releases/download/1.16.1/rime-de4700e-Windows-msvc-x86.7z
-	7z x -olibrime-lua5.4 rime-de4700e-Windows-msvc-x86.7z
+	curl -L -O https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x86.7z
+	7z x -olibrime-lua5.4 rime-33e7814-Windows-msvc-x86.7z
 
 librime-lua5.4-x64:
-	curl -L -O https://github.com/rime/librime/releases/download/1.16.1/rime-de4700e-Windows-msvc-x64.7z
-	7z x -olibrime-lua5.4-x64 rime-de4700e-Windows-msvc-x64.7z
+	curl -L -O https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x64.7z
+	7z x -olibrime-lua5.4-x64 rime-33e7814-Windows-msvc-x64.7z
 thirdparty:
 	git clone -b thirdparty http://github.com/hchunhui/librime-lua.git thirdparty
 

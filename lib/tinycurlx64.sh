@@ -1,6 +1,6 @@
 #!/bin/sh
 export CC="x86_64-w64-mingw32-gcc"
-export CFLAGS="-Os -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables"
+export CFLAGS="-Os -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables -D_WIN32_WINNT=0x0600"
 export LDFLAGS="-Wl,-s -Wl,-Bsymbolic -Wl,--gc-sections -static-libgcc"
 mkdir -p build64 && cd build64 && ../configure --host x86_64-w64-mingw32 \
 --disable-pthreads \

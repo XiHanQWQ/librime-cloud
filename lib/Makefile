@@ -23,16 +23,20 @@ PLAT ?= linux
 LDFLAGS_linux = -Wl,--gc-sections -Wl,-s
 LDFLAGS_macos = -Wl,-bundle -Wl,-undefined,dynamic_lookup
 LDFLAGS = ${LDFLAGS_${PLAT}}
+MINGWLDFLAGS = -Wl,--gc-sections -Wl,-s -static-libgcc
+
+.PHONY: all prepare clean purge
 
 all: simplehttp.so simplehttp.dll simplehttpx64.dll iconv.so iconv.dll iconvx64.dll
 
-librime-lua5.4:
+librime-lua${LUAV}:
 	curl -L -O https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x86.7z
-	7z x -olibrime-lua5.4 rime-33e7814-Windows-msvc-x86.7z
+	7z x -olibrime-lua${LUAV} rime-33e7814-Windows-msvc-x86.7z
 
-librime-lua5.4-x64:
+librime-lua${LUAV}-x64:
 	curl -L -O https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x64.7z
-	7z x -olibrime-lua5.4-x64 rime-33e7814-Windows-msvc-x64.7z
+	7z x -olibrime-lua${LUAV}-x64 rime-33e7814-Windows-msvc-x64.7z
+
 thirdparty:
 	git clone -b thirdparty http://github.com/hchunhui/librime-lua.git thirdparty
 
@@ -47,7 +51,7 @@ libiconv-${ICONV_V}:
 lua-iconv-${LUA_ICONV_V}:
 	git clone -b v${LUA_ICONV_V} https://github.com/lunarmodules/lua-iconv.git lua-iconv-${LUA_ICONV_V}
 
-prepare: librime-lua5.4 librime-lua5.4-x64 thirdparty curl-${CURLV} lua-iconv-${LUA_ICONV_V}
+prepare: librime-lua${LUAV} librime-lua${LUAV}-x64 thirdparty curl-${CURLV} lua-iconv-${LUA_ICONV_V}
 
 curl-${CURLV}/build32/lib/.libs: curl-${CURLV}
 	cd curl-${CURLV} && sh ../tinycurl.sh
@@ -65,10 +69,10 @@ simplehttp.so: main.c thirdparty curl-${CURLV}
 	${CC} -I${LUAINC} -I${CURLINC} -Os -fPIC -shared ${LDFLAGS} -o $@ $<
 
 simplehttp.dll: main.c librime-lua${LUAV} thirdparty curl-${CURLV}/build32/lib/.libs
-	${CC_mingw} -I${LUAINC} -I${CURLINC} -Os -shared -o $@ $< -Wl,--gc-sections -Wl,-s -static-libgcc ${LUALIB} ${CURLLIB}
+	${CC_mingw} -I${LUAINC} -I${CURLINC} -Os -shared -o $@ $< ${MINGWLDFLAGS} ${LUALIB} ${CURLLIB}
 
 simplehttpx64.dll: main.c librime-lua${LUAV}-x64 thirdparty curl-${CURLV}/build64/lib/.libs
-	${CC_mingw64} -I${LUAINC} -I${CURLINC} -Os -shared -o $@ $< -Wl,--gc-sections -Wl,-s -static-libgcc ${LUALIB64} ${CURLLIB64}
+	${CC_mingw64} -I${LUAINC} -I${CURLINC} -Os -shared -o $@ $< ${MINGWLDFLAGS} ${LUALIB64} ${CURLLIB64}
 
 lua-iconv-${LUA_ICONV_V}/luaiconv.c: lua-iconv-${LUA_ICONV_V}
 
@@ -76,10 +80,10 @@ iconv.so: lua-iconv-${LUA_ICONV_V}/luaiconv.c
 	${CC} -I${LUAINC} -Os -fPIC -shared ${LDFLAGS} -o $@ $<
 
 iconv.dll: lua-iconv-${LUA_ICONV_V}/luaiconv.c librime-lua${LUAV} libiconv-${ICONV_V}/build32/lib/.libs
-	${CC_mingw} -I${LUAINC} -I${ICONV_INC} -Os -shared -o $@ $< -Wl,--gc-sections -Wl,-s -static-libgcc ${LUALIB} ${ICONV_LIB}
+	${CC_mingw} -I${LUAINC} -I${ICONV_INC} -Os -shared -o $@ $< ${MINGWLDFLAGS} ${LUALIB} ${ICONV_LIB}
 
 iconvx64.dll: lua-iconv-${LUA_ICONV_V}/luaiconv.c librime-lua${LUAV}-x64 libiconv-${ICONV_V}/build64/lib/.libs
-	${CC_mingw64} -I${LUAINC} -I${ICONV_INC64} -Os -shared -o $@ $< -Wl,--gc-sections -Wl,-s -static-libgcc ${LUALIB64} ${ICONV_LIB64}
+	${CC_mingw64} -I${LUAINC} -I${ICONV_INC64} -Os -shared -o $@ $< ${MINGWLDFLAGS} ${LUALIB64} ${ICONV_LIB64}
 
 clean:
 	rm -f simplehttp.so simplehttp.dll simplehttpx64.dll iconv.so iconv.dll iconvx64.dll

@@ -66,7 +66,10 @@ static size_t string_writer0(const char *ptr, size_t size, size_t nb, void *ud)
 {
 	String *writer = ud;
 	size_t count = size * nb;
-	writer->str = realloc(writer->str, writer->len + count + 1);
+	char *p = realloc(writer->str, writer->len + count + 1);
+	if (!p)
+		return 0;
+	writer->str = p;
 	memcpy(writer->str + writer->len, ptr, count);
 	writer->len += count;
 	writer->str[writer->len++] = 0;
@@ -77,7 +80,10 @@ static size_t string_writer(const char *ptr, size_t size, size_t nb, void *ud)
 {
 	String *writer = ud;
 	size_t count = size * nb;
-	writer->str = realloc(writer->str, writer->len + count);
+	char *p = realloc(writer->str, writer->len + count);
+	if (!p)
+		return 0;
+	writer->str = p;
 	memcpy(writer->str + writer->len, ptr, count);
 	writer->len += count;
 	return count;
@@ -207,12 +213,6 @@ static bool request(Context *curl, const Request *req, Reply *reply)
 		// 根据代理URL自动检测代理类型
 		int proxy_type = detect_proxy_type(req->proxy);
 		curl_(easy_setopt)(ch, CURLOPT_PROXYTYPE, proxy_type);
-		
-		// 支持HTTPS代理的验证
-		if (proxy_type == CURLPROXY_HTTPS) {
-			curl_(easy_setopt)(ch, CURLOPT_PROXY_SSL_VERIFYPEER, 0L);
-			curl_(easy_setopt)(ch, CURLOPT_PROXY_SSL_VERIFYHOST, 0L);
-		}
 	}
 
 	if (req->postdatalen > 0 &&
@@ -418,6 +418,8 @@ static int w_request(lua_State *L)
 	if (!ok) {
 		lua_pushnil(L);
 		lua_pushstring(L, reply.error ? reply.error : "Unknown error");
+		free(reply.body.str);
+		free(reply.header.str);
 		return 2;
 	}
 
@@ -483,6 +485,7 @@ static int w_request(lua_State *L)
 		lua_remove(L, -2);
 		return 3;
 	}
+	free(reply.header.str);
 	return 2;
 }
 

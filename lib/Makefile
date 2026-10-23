@@ -40,8 +40,8 @@ update-deps:
 	@set -e; \
 	curlv=`curl -s $(AUTH) https://api.github.com/repos/curl/curl/releases/latest | sed -n 's/.*"tag_name": *"curl-\([^"]*\)".*/\1/p' | tr _ .`; \
 	rime=`curl -s $(AUTH) https://api.github.com/repos/rime/librime/releases/latest`; \
-	x86=`printf '%s' "$$rime" | sed -n 's/.*"browser_download_url": *"\([^"]*Windows-msvc-x86\.7z\)".*/\1/p'`; \
-	x64=`printf '%s' "$$rime" | sed -n 's/.*"browser_download_url": *"\([^"]*Windows-msvc-x64\.7z\)".*/\1/p'`; \
+	x86=`printf '%s' "$$rime" | sed -n 's/.*"browser_download_url": *"\([^"]*Windows-msvc-x86\.7z\)".*/\1/p' | grep -v rime-deps-`; \
+	x64=`printf '%s' "$$rime" | sed -n 's/.*"browser_download_url": *"\([^"]*Windows-msvc-x64\.7z\)".*/\1/p' | grep -v rime-deps-`; \
 	test -n "$$curlv" -a -n "$$x86" -a -n "$$x64" || { echo 'github api: failed to resolve latest releases'; exit 1; }; \
 	printf 'CURLV = %s\nRIME_X86_URL = %s\nRIME_X64_URL = %s\n' "$$curlv" "$$x86" "$$x64" > DEPS.mk; \
 	echo 'DEPS.mk updated (commit it for reproducible builds):'; cat DEPS.mk

@@ -80,7 +80,7 @@ jobs:
   release:
     needs: [ build , build_macos ]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && startsWith(github.ref, 'refs/heads/master')
     steps:
     - name: download artifacts
       uses: actions/download-artifact@v8

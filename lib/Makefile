@@ -36,8 +36,9 @@ all: simplehttp.so simplehttp.dll simplehttpx64.dll iconv.so iconv.dll iconvx64.
 
 update-deps:
 	@set -e; \
-	curlv=`curl -s https://api.github.com/repos/curl/curl/releases/latest | sed -n 's/.*"tag_name": *"curl-\([^"]*\)".*/\1/p' | tr _ .`; \
-	rime=`curl -s https://api.github.com/repos/rime/librime/releases/latest`; \
+	AUTH=$(if $(GITHUB_TOKEN),-H "Authorization: Bearer $(GITHUB_TOKEN)"); \
+	curlv=`curl -s $(AUTH) https://api.github.com/repos/curl/curl/releases/latest | sed -n 's/.*"tag_name": *"curl-\([^"]*\)".*/\1/p' | tr _ .`; \
+	rime=`curl -s $(AUTH) https://api.github.com/repos/rime/librime/releases/latest`; \
 	x86=`printf '%s' "$$rime" | sed -n 's/.*"browser_download_url": *"\([^"]*Windows-msvc-x86\.7z\)".*/\1/p'`; \
 	x64=`printf '%s' "$$rime" | sed -n 's/.*"browser_download_url": *"\([^"]*Windows-msvc-x64\.7z\)".*/\1/p'`; \
 	test -n "$$curlv" -a -n "$$x86" -a -n "$$x64" || { echo 'github api: failed to resolve latest releases'; exit 1; }; \

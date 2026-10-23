@@ -20,6 +20,11 @@ jobs:
     - name: build docker image
       run: docker build -t build .
 
+    - name: update deps
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make update-deps
+
     - name: prepare
       run: cd lib && make prepare && cd ..
 
@@ -42,6 +47,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
+
+    - name: update deps
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make update-deps
 
     - name: build
       run: make macos

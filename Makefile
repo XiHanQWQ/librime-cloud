@@ -1,4 +1,4 @@
-.PHONY: all linux win32 macos clean purge
+.PHONY: all linux win32 macos update-deps clean purge
 
 ARCH = $(shell uname -m)
 
@@ -23,6 +23,9 @@ macos:
 clean:
 	rm -rf out-linux out-macos out-mingw out-mingw64
 	rm -f linux-*.tar.gz macos-*.tar.gz win32-*.zip
+
+update-deps:
+	$(MAKE) -C lib update-deps
 
 purge: clean
 	$(MAKE) -C lib purge

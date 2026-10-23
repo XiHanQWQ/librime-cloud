@@ -25,17 +25,32 @@ LDFLAGS_macos = -Wl,-bundle -Wl,-undefined,dynamic_lookup
 LDFLAGS = ${LDFLAGS_${PLAT}}
 MINGWLDFLAGS = -Wl,--gc-sections -Wl,-s -static-libgcc
 
-.PHONY: all prepare clean purge
+RIME_X86_URL ?= https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x86.7z
+RIME_X64_URL ?= https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x64.7z
+
+-include DEPS.mk
+
+.PHONY: all prepare update-deps clean purge
 
 all: simplehttp.so simplehttp.dll simplehttpx64.dll iconv.so iconv.dll iconvx64.dll
 
+update-deps:
+	@set -e; \
+	curlv=`curl -s https://api.github.com/repos/curl/curl/releases/latest | sed -n 's/.*"tag_name": *"curl-\([^"]*\)".*/\1/p' | tr _ .`; \
+	rime=`curl -s https://api.github.com/repos/rime/librime/releases/latest`; \
+	x86=`printf '%s' "$$rime" | sed -n 's/.*"browser_download_url": *"\([^"]*Windows-msvc-x86\.7z\)".*/\1/p'`; \
+	x64=`printf '%s' "$$rime" | sed -n 's/.*"browser_download_url": *"\([^"]*Windows-msvc-x64\.7z\)".*/\1/p'`; \
+	test -n "$$curlv" -a -n "$$x86" -a -n "$$x64" || { echo 'github api: failed to resolve latest releases'; exit 1; }; \
+	printf 'CURLV = %s\nRIME_X86_URL = %s\nRIME_X64_URL = %s\n' "$$curlv" "$$x86" "$$x64" > DEPS.mk; \
+	echo 'DEPS.mk updated (commit it for reproducible builds):'; cat DEPS.mk
+
 librime-lua${LUAV}:
-	curl -L -O https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x86.7z
-	7z x -olibrime-lua${LUAV} rime-33e7814-Windows-msvc-x86.7z
+	curl -L -o rime-x86.7z ${RIME_X86_URL}
+	7z x -olibrime-lua${LUAV} rime-x86.7z
 
 librime-lua${LUAV}-x64:
-	curl -L -O https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x64.7z
-	7z x -olibrime-lua${LUAV}-x64 rime-33e7814-Windows-msvc-x64.7z
+	curl -L -o rime-x64.7z ${RIME_X64_URL}
+	7z x -olibrime-lua${LUAV}-x64 rime-x64.7z
 
 thirdparty:
 	git clone -b thirdparty http://github.com/hchunhui/librime-lua.git thirdparty

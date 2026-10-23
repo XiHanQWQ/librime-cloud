@@ -7,9 +7,6 @@ on:
     branches: [ "master" ]
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -67,12 +64,9 @@ jobs:
         path: macos*.tar.gz
 
   release:
-    needs: [ build, build_macos ]
+    needs: [ build , build_macos ]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
-    permissions:
-      contents: write
-
     steps:
     - name: download artifacts
       uses: actions/download-artifact@v8
@@ -81,12 +75,6 @@ jobs:
         merge-multiple: true
 
     - name: release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: continuous
-        name: Continuous Build
-        files: artifact/*
-        prerelease: true
-        generate_release_notes: false
-        overwrite: true
-        token: ${{ secrets.WORKFLOW_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh && bash upload.sh artifact/*

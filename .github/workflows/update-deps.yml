@@ -1,0 +1,55 @@
+name: update-deps
+
+on:
+  schedule:
+    - cron: "23 3 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-deps
+  cancel-in-progress: false
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: resolve latest curl/librime
+        run: make update-deps
+
+      - name: check for changes
+        id: diff
+        run: |
+          if git diff --quiet lib/DEPS.mk; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: open PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="deps/update-$(date +%Y%m%d)"
+          if git ls-remote --heads origin "$BRANCH" | grep -q .; then
+            echo "branch $BRANCH already exists (PR probably open), skipping"
+            exit 0
+          fi
+          {
+            echo "Auto-detected upstream releases by update-deps workflow."
+            echo "~~~diff"
+            git diff lib/DEPS.mk
+            echo "~~~"
+          } > /tmp/pr-body.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git commit -am "chore: update curl/librime deps"
+          git push origin "$BRANCH"
+          gh pr create --head "$BRANCH" --title "Update curl/librime deps" --body-file /tmp/pr-body.md

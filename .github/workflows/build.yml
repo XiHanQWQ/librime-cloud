@@ -7,6 +7,9 @@ on:
     branches: [ "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,7 +19,7 @@ jobs:
         os: [linux, win32]
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: build docker image
       run: docker build -t build .
@@ -33,7 +36,7 @@ jobs:
       run: docker run -v $PWD:/work --rm build bash -c "cd /work && make ${{ matrix.os }}"
 
     - name: upload artifacts
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.os }}
         path: |
@@ -47,7 +50,7 @@ jobs:
         os: [macos-15, macos-15-intel]
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: update deps
       env:
@@ -58,23 +61,32 @@ jobs:
       run: make macos
 
     - name: upload artifacts
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.os }}
         path: macos*.tar.gz
 
   release:
-    needs: [ build , build_macos ]
+    needs: [ build, build_macos ]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
+    permissions:
+      contents: write
+
     steps:
     - name: download artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v8
       with:
         path: artifact
         merge-multiple: true
 
     - name: release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh && bash upload.sh artifact/*
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: continuous
+        name: Continuous Build
+        files: artifact/*
+        prerelease: true
+        generate_release_notes: false
+        overwrite: true
+        token: ${{ secrets.WORKFLOW_TOKEN }}
